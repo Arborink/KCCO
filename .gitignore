@@ -1,0 +1,22 @@
+# Build
+build/
+
+# Core source (not open source)
+core/
+
+# lib — release via Github Releases
+lib/*.so
+lib/*.a
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
