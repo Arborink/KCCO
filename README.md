@@ -94,6 +94,15 @@ Software: :contentReference[oaicite:1]{index=1}
 
 ---
 
+## Installation
+
+1. Download "liboverlay.so" from [Releases](https://github.com/arborink/KCCO/releases)
+2. Place it in the "lib/"directory
+3. Build:
+bash
+cmake -B build
+cmake --build build
+
 # Build Example
 
 Example build command:
