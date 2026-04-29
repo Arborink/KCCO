@@ -1,0 +1,26 @@
+KCCO:
+========== Patent Simulation Report ==========
+
+Resource Matching Success Rate: 76 %
+
+Average Discovery Latency (RTT-based): 1.99144 s
+
+Total Physical Layer Collisions: 459316
+
+Total Control Plane Overhead (Queries): 14918 times
+
+Total DDS Metadata Intercepted and Optimized: 7.28418 MB
+==========================================================
+
+Zenoh:
+===== Zenoh-over-DDS Hybrid Mode Simulation Report =====
+
+Resource Discovery Success Rate (Match Rate): 63.6 %
+
+Average Discovery Latency (Inc. DDS Handshake): 9.98571 s
+
+Physical Layer Collisions: 2076111
+
+Zenoh Compressed Control Traffic (Queries): 47267 times
+
+Simulated Intercepted Raw DDS Metadata Volume: 23.0796 MB
