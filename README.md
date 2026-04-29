@@ -94,6 +94,15 @@ Software: :contentReference[oaicite:1]{index=1}
 
 ---
 
+## Installation
+
+1. Download "liboverlay.so" from [Releases](https://github.com/arborink/KCCO/releases)
+2. Place it in the "lib/"directory
+3. Build:
+bash
+cmake -B build
+cmake --build build
+
 # Build Example
 
 Example build command:
@@ -196,6 +205,26 @@ QUIC
 custom messaging systems
 
 A reference adapter based on Zenoh is provided in this repository.
+
+## Simulation Results (ns-3)
+
+Performance comparison between KCCO overlay and Zenoh-over-DDS hybrid mode,
+simulated using ns-3. Full report available in [`ns3/report.txt`](ns3/report.txt).
+
+| Metric | KCCO | Zenoh-over-DDS |
+|--------|------|----------------|
+| Resource Discovery Success Rate | **76%** | 63.6% |
+| Average Discovery Latency | **1.99 s** | 9.99 s |
+| Physical Layer Collisions | **459,316** | 2,076,111 |
+| Control Plane Overhead (Queries) | **14,918** | 47,267 |
+| Metadata Volume | **7.28 MB** | 23.08 MB |
+
+KCCO outperforms Zenoh-over-DDS across all metrics:
+- **20% higher** resource discovery success rate
+- **5x lower** discovery latency
+- **4.5x fewer** physical layer collisions
+- **3.2x lower** control plane overhead
+- **3.2x less** metadata volume
 
 License
 
