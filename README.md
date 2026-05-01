@@ -1,12 +1,12 @@
 # KCCO Overlay
 
-KCCO (K-Clique Community Overlay) is a distributed overlay networking framework designed for scalable decentralized resource discovery.
+KCCO (K-Clique Community Overlay) is a mobile P2P overlay networking framework designed for scalable decentralized resource discovery under churn.
 
 The system organizes nodes into bounded-size communities and maintains an efficient distributed resource index without relying on centralized infrastructure.
 
 # Overlay Network SDK
 
-A lightweight distributed overlay networking SDK designed for scalable resource discovery and decentralized service coordination.
+A lightweight mobile P2P overlay networking SDK designed for scalable resource discovery and decentralized service coordination.
 
 This repository provides the public SDK interface and example integrations.  
 The core overlay algorithms are distributed as a precompiled shared library.
