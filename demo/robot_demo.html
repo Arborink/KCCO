@@ -1,0 +1,255 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KCCO — Robot Vision Network Demo</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #0a0f1a; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; padding: 24px; }
+h1 { color: #5DCAA5; font-size: 20px; font-weight: 500; margin-bottom: 6px; letter-spacing: 0.5px; }
+p.sub { color: #6b7a8d; font-size: 13px; margin-bottom: 18px; }
+canvas { display: block; border-radius: 14px; border: 1px solid #1e2d42; background: #0d1421; max-width: 100%; }
+#cap { font-size: 14px; color: #8a9bb0; text-align: center; margin: 12px 0 6px; min-height: 46px; line-height: 1.6; max-width: 640px; }
+#cap strong { color: #e0e8f0; font-weight: 500; }
+#cap em { color: #5DCAA5; font-style: normal; }
+#dots { display: flex; gap: 7px; justify-content: center; margin: 8px 0 4px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: #1e2d42; transition: background 0.3s; }
+.dot.on { background: #5DCAA5; }
+.ctrl { display: flex; gap: 10px; justify-content: center; margin: 10px 0 0; }
+button { background: transparent; border: 1px solid #2a3d54; color: #8a9bb0; font-size: 13px; padding: 7px 22px; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+button:hover { background: #162030; color: #e0e8f0; border-color: #3d5570; }
+button:active { transform: scale(0.97); }
+</style>
+</head>
+<body>
+<h1>KCCO Overlay Network</h1>
+<p class="sub">Decentralized resource sharing for robot fleets</p>
+<canvas id="cv" width="680" height="400"></canvas>
+<div id="cap">Press <strong>Play</strong> to start</div>
+<div id="dots">
+  <div class="dot" id="d0"></div>
+  <div class="dot" id="d1"></div>
+  <div class="dot" id="d2"></div>
+  <div class="dot" id="d3"></div>
+  <div class="dot" id="d4"></div>
+</div>
+<div class="ctrl">
+  <button id="bPlay" onclick="togglePlay()">Play</button>
+  <button onclick="doRestart()">Restart</button>
+</div>
+
+<script>
+const cv = document.getElementById('cv');
+const cx = cv.getContext('2d');
+const W = 680, H = 400;
+
+const ROBOTS = [
+  { id:0, x:120, y:200, vx:0.5,  vy:0.35,  col:'#5DCAA5', name:'Alpha', res:'Vision model' },
+  { id:1, x:340, y: 90, vx:-0.4, vy:0.5,   col:'#378ADD', name:'Beta',  res:null },
+  { id:2, x:560, y:200, vx:-0.45,vy:-0.35,  col:'#7F77DD', name:'Gamma', res:'Object tags' },
+  { id:3, x:230, y:320, vx:0.55, vy:-0.4,  col:'#EF9F27', name:'Delta', res:null },
+  { id:4, x:460, y:320, vx:-0.5, vy:0.3,   col:'#D4537E', name:'Eps',   res:'Depth map' },
+];
+
+const STEPS = [
+  { cap: '<strong>5 robots</strong> explore independently. Each carries different visual recognition capabilities.' },
+  { cap: '<strong>Beta</strong> needs a vision model. It broadcasts: <em>"Who has a vision model?"</em>' },
+  { cap: 'Network responds instantly. <strong>Alpha replies: "I have it — come get it."</strong> No server, no middleman.' },
+  { cap: '<strong>Alpha streams the vision model to Beta.</strong> Delta simultaneously requests object tags from Gamma.' },
+  { cap: '<strong>All robots are now fully equipped.</strong> The fleet operates as one intelligent, decentralized system.' },
+];
+
+let step = 0, tick = 0, playing = false, raf = null, stTimer = null;
+const beams = [], bubbles = [];
+
+function spawnBubble(x, y, txt, col, duration) {
+  bubbles.push({ x, y, txt, col, age:0, duration: duration||120 });
+}
+
+function spawnBeam(r1, r2, col, msg, reply, speed) {
+  beams.push({ x1:r1.x, y1:r1.y, x2:r2.x, y2:r2.y, col, msg, reply, p:0, speed:speed||0.006, done:false, replyShown:false });
+}
+
+function clearFx() { beams.length = 0; bubbles.length = 0; }
+
+function runStep(s) {
+  step = s; clearFx(); updateDots();
+  document.getElementById('cap').innerHTML = STEPS[s].cap;
+  if (s === 1) {
+    const b = ROBOTS[1];
+    ROBOTS.forEach((r,i) => { if(i!==1) spawnBeam(b,r,'#378ADD','Need: vision model?',null,0.005); });
+    spawnBubble(b.x, b.y-50, 'Need: vision model?', '#378ADD', 160);
+  }
+  if (s === 2) {
+    const a=ROBOTS[0], b=ROBOTS[1];
+    spawnBeam(a,b,'#5DCAA5','I have it!','Reply received',0.005);
+    spawnBubble(a.x, a.y-50, 'I have it!', '#5DCAA5', 160);
+  }
+  if (s === 3) {
+    const a=ROBOTS[0],b=ROBOTS[1],g=ROBOTS[2],d=ROBOTS[3];
+    spawnBeam(a,b,'#5DCAA5','Sending: vision model','Transfer complete',0.004);
+    spawnBubble(a.x, a.y-50, 'Sending vision model...', '#5DCAA5', 200);
+    setTimeout(() => {
+      spawnBeam(g,d,'#7F77DD','Sending: object tags','Transfer complete',0.004);
+      spawnBubble(g.x, g.y-50, 'Sending object tags...', '#7F77DD', 200);
+    }, 700);
+  }
+  if (s === 4) {
+    ROBOTS.forEach(r => spawnBubble(r.x, r.y-50, 'Ready', r.col, 200));
+  }
+}
+
+function drawBg() {
+  cx.fillStyle = '#0d1421'; cx.fillRect(0,0,W,H);
+  cx.strokeStyle = '#131e2e'; cx.lineWidth = 1;
+  for(let gx=0;gx<W;gx+=44){ cx.beginPath(); cx.moveTo(gx,0); cx.lineTo(gx,H); cx.stroke(); }
+  for(let gy=0;gy<H;gy+=44){ cx.beginPath(); cx.moveTo(0,gy); cx.lineTo(W,gy); cx.stroke(); }
+  if (step >= 4) {
+    cx.strokeStyle='#5DCAA522'; cx.lineWidth=1; cx.setLineDash([4,7]);
+    for(let i=0;i<ROBOTS.length;i++) for(let j=i+1;j<ROBOTS.length;j++){
+      cx.beginPath(); cx.moveTo(ROBOTS[i].x,ROBOTS[i].y); cx.lineTo(ROBOTS[j].x,ROBOTS[j].y); cx.stroke();
+    }
+    cx.setLineDash([]);
+  }
+}
+
+function drawRobot(r, glowing) {
+  const {x,y,col,name,res}=r; const rr=26;
+  cx.save(); cx.translate(x,y);
+  if (glowing) {
+    cx.beginPath(); cx.arc(0,0,rr+10+3*Math.sin(tick*0.07),0,Math.PI*2);
+    cx.fillStyle=col+'28'; cx.fill();
+  }
+  cx.beginPath(); cx.roundRect(-rr,-rr,rr*2,rr*2,7);
+  cx.fillStyle='#162030'; cx.fill();
+  cx.strokeStyle=col; cx.lineWidth=step===4?2:1.5; cx.stroke();
+  cx.beginPath(); cx.roundRect(-11,-rr-9,22,11,3);
+  cx.fillStyle=col+'cc'; cx.fill();
+  cx.fillStyle='#fff'; cx.font='500 8px sans-serif'; cx.textAlign='center'; cx.textBaseline='middle';
+  cx.fillText(name,0,-rr-4);
+  cx.fillStyle=col;
+  cx.beginPath(); cx.arc(-9,-8,4,0,Math.PI*2); cx.fill();
+  cx.beginPath(); cx.arc( 9,-8,4,0,Math.PI*2); cx.fill();
+  cx.fillStyle='#233044'; cx.fillRect(-13,2,26,14);
+  cx.strokeStyle=col+'66'; cx.lineWidth=0.8;
+  for(let i=0;i<4;i++){ cx.beginPath(); cx.moveTo(-11+i*7,4); cx.lineTo(-11+i*7,14); cx.stroke(); }
+  const fill=res||step===4?1:0.25;
+  cx.fillStyle='#0d1421'; cx.fillRect(-rr,16,rr*2,5);
+  cx.fillStyle=col+'99'; cx.fillRect(-rr+2,17,(rr*2-4)*fill,3);
+  cx.strokeStyle=col+'55'; cx.lineWidth=1;
+  cx.beginPath(); cx.moveTo(-7,rr-6); cx.lineTo(-7,rr+5);
+  cx.moveTo(7,rr-6); cx.lineTo(7,rr+5); cx.stroke();
+  if (res && step < 4) {
+    cx.fillStyle=col+'bb';
+    const tw=cx.measureText(res).width+12;
+    cx.beginPath(); cx.roundRect(-tw/2,rr+8,tw,16,4); cx.fill();
+    cx.fillStyle='#fff'; cx.font='500 9px sans-serif'; cx.textAlign='center'; cx.textBaseline='middle';
+    cx.fillText(res,0,rr+16);
+  }
+  cx.restore();
+}
+
+function drawBeams() {
+  beams.forEach(b => {
+    if(b.done) return;
+    b.p = Math.min(1, b.p+b.speed);
+    const ex=b.x1+(b.x2-b.x1)*b.p, ey=b.y1+(b.y2-b.y1)*b.p;
+    cx.save();
+    cx.strokeStyle=b.col; cx.lineWidth=1.5; cx.globalAlpha=0.55; cx.setLineDash([6,5]);
+    cx.beginPath(); cx.moveTo(b.x1,b.y1); cx.lineTo(ex,ey); cx.stroke();
+    cx.setLineDash([]); cx.globalAlpha=1;
+    if(b.p>0.08){ cx.beginPath(); cx.arc(ex,ey,5,0,Math.PI*2); cx.fillStyle=b.col; cx.fill(); }
+    if(b.msg && b.p>0.15 && b.p<0.82){
+      const mx=b.x1+(b.x2-b.x1)*b.p, my=b.y1+(b.y2-b.y1)*b.p-14;
+      const tw=cx.measureText(b.msg).width+14;
+      cx.fillStyle=b.col+'dd';
+      cx.beginPath(); cx.roundRect(mx-tw/2,my-9,tw,18,4); cx.fill();
+      cx.fillStyle='#fff'; cx.font='500 10px sans-serif'; cx.textAlign='center'; cx.textBaseline='middle';
+      cx.fillText(b.msg,mx,my);
+    }
+    if(b.p>=1 && !b.replyShown && b.reply){
+      b.replyShown=true; spawnBubble(b.x2,b.y2-46,b.reply,b.col,120); b.done=true;
+    } else if(b.p>=1 && !b.reply){ b.done=true; }
+    cx.restore();
+  });
+}
+
+function drawBubbles() {
+  bubbles.forEach(bb => {
+    bb.age++;
+    const alpha=Math.min(1,Math.min(bb.age/15,(bb.duration-bb.age)/20));
+    if(alpha<=0) return;
+    const y=bb.y-bb.age*0.15;
+    cx.save(); cx.globalAlpha=alpha;
+    cx.font='500 11px sans-serif'; cx.textAlign='center';
+    const tw=cx.measureText(bb.txt).width+16;
+    cx.fillStyle=bb.col+'ee';
+    cx.beginPath(); cx.roundRect(bb.x-tw/2,y-10,tw,20,5); cx.fill();
+    cx.fillStyle='#fff'; cx.textBaseline='middle'; cx.fillText(bb.txt,bb.x,y);
+    cx.restore();
+  });
+  for(let i=bubbles.length-1;i>=0;i--) if(bubbles[i].age>=bubbles[i].duration) bubbles.splice(i,1);
+}
+
+function moveRobots() {
+  ROBOTS.forEach(r => {
+    r.x+=r.vx; r.y+=r.vy;
+    if(r.x<55||r.x>W-55) r.vx*=-1;
+    if(r.y<55||r.y>H-55) r.vy*=-1;
+  });
+}
+
+function updateDots() {
+  for(let i=0;i<5;i++) document.getElementById('d'+i).className='dot'+(i===step?' on':'');
+}
+
+function frame() {
+  tick++;
+  if(step<3) moveRobots();
+  drawBg(); drawBeams();
+  ROBOTS.forEach((r,i)=>{ const g=step===1&&i===1||step===2&&(i===0||i===1)||step===3&&i<4||step===4; drawRobot(r,g); });
+  drawBubbles();
+  if(playing) raf=requestAnimationFrame(frame);
+}
+
+const DELAYS=[3500,4200,4500,5500,5000];
+
+function autoAdvance() {
+  clearTimeout(stTimer); runStep(step);
+  if(step<4){
+    stTimer=setTimeout(()=>{ step++; autoAdvance(); }, DELAYS[step]);
+  } else {
+    stTimer=setTimeout(()=>{ playing=false; cancelAnimationFrame(raf); document.getElementById('bPlay').textContent='Play'; }, DELAYS[4]);
+  }
+}
+
+function togglePlay() {
+  if(!playing){
+    playing=true; document.getElementById('bPlay').textContent='Pause';
+    raf=requestAnimationFrame(frame); autoAdvance();
+  } else {
+    playing=false; document.getElementById('bPlay').textContent='Play';
+    cancelAnimationFrame(raf); clearTimeout(stTimer);
+  }
+}
+
+function doRestart() {
+  cancelAnimationFrame(raf); clearTimeout(stTimer);
+  playing=false; step=0; tick=0;
+  document.getElementById('bPlay').textContent='Play';
+  document.getElementById('cap').innerHTML='Press <strong>Play</strong> to start';
+  ROBOTS[0].x=120;ROBOTS[0].y=200;
+  ROBOTS[1].x=340;ROBOTS[1].y= 90;
+  ROBOTS[2].x=560;ROBOTS[2].y=200;
+  ROBOTS[3].x=230;ROBOTS[3].y=320;
+  ROBOTS[4].x=460;ROBOTS[4].y=320;
+  clearFx(); updateDots(); drawBg();
+  ROBOTS.forEach(r=>drawRobot(r,false));
+}
+
+doRestart();
+</script>
+</body>
+</html>
