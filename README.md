@@ -226,6 +226,10 @@ KCCO outperforms Zenoh-over-DDS across all metrics:
 - **3.2x lower** control plane overhead
 - **3.2x less** metadata volume
 
+## Live Demo
+
+[View the interactive demo](https://arborink.github.io/KCCO/demo/robot_demo.html)
+
 License
 
 The SDK interface and example code are provided for integration and evaluation.
