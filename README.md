@@ -209,7 +209,7 @@ A reference adapter based on Zenoh is provided in this repository.
 ## Simulation Results (ns-3)
 
 Performance comparison between KCCO overlay and Zenoh-over-DDS hybrid mode,
-simulated using ns-3. Full report available in [`ns3/report.txt`](ns3/report.txt).
+simulated 1000 mobile nodes using ns-3 . 
 
 | Metric | KCCO | Zenoh-over-DDS |
 |--------|------|----------------|
